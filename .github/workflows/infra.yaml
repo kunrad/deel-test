@@ -79,7 +79,8 @@ jobs:
           working-directory: ${{ env.TF_working_dir }}
           run: |
             echo "CLUSTER_ID=$(terraform output -raw cluster_id)" >> $GITHUB_ENV
-            cat $CLUSTER_ID
+            echo "Cluster ID: $CLUSTER_ID" # Print the value of CLUSTER_ID
+
 
     application:
         name: Helm Deploy
@@ -106,7 +107,7 @@ jobs:
         - name: Fetch and Configure Kubeconfig using doctl
           run: |
             mkdir -p $HOME/.kube
-            $CLUSTER_ID
+            doctl kubernetes cluster kubeconfig save $CLUSTER_ID
             chmod 600 $HOME/.kube/config
 
         - name: Configure Kubeconfig
