@@ -131,6 +131,7 @@ jobs:
             helm-version: "v3.10.1" # https://github.com/helm/helm/releases
             release-name: reverseip
             namespace: default
+            timeout: 20m
             values-filepath: ${{ github.workspace }}/./reverse-ip/values.yaml 
           env:
             KUBECONFIG: ${{ github.workspace }}/$HOME/.kube/config
