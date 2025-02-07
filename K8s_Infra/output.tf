@@ -7,6 +7,7 @@ output "kubeconfig" {
   sensitive = true
 }
 
-output "name" {
-
+output "cluster_id" {
+  value = digitalocean_kubernetes_cluster.cluster.id
+  description = "Extracted DigitalOcean Kubernetes Cluster ID"
 }
