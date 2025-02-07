@@ -122,15 +122,15 @@ jobs:
             kubectl get pods -A
 
         - name: Helm Deploy
-          uses: 'deliverybot/helm@v1'
+          uses: 'licenseware/helm@v1'
           with:
-            chart: reverse-ip
-            release: reverseip
+            kubeconfig-filepath: $HOME/.kube/config
+            action: upgrade -i
+            chart-dir: ./K8s_Infra/reverse-ip
+            helm-version: "v3.10.1" # https://github.com/helm/helm/releases
+            release-name: reverseip
             namespace: default
-            value-files: >-
-              [
-                "reverse-ip/values.yaml"
-              ] 
+            values-filepath: ./K8s_Infra/reverse-ip/values.yaml 
           env:
             KUBECONFIG: ${{ github.workspace }}/$HOME/.kube/config
 
