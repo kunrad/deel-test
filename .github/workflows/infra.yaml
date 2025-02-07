@@ -80,6 +80,7 @@ jobs:
           run: |
             CLUSTER_ID=$(terraform output -raw cluster_id)
             echo "CLUSTER_ID=$CLUSTER_ID" >> $GITHUB_ENV
+            echo "CLUSTER_ID=$CLUSTER_ID" >> $GITHUB_OUTPUT # Set output for next job
             echo "Extracted Cluster ID: $CLUSTER_ID"
 
 
