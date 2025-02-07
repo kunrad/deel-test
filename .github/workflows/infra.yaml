@@ -126,6 +126,7 @@ jobs:
           with:
             kubeconfig-filepath: $HOME/.kube/config
             action: upgrade -i
+            atomic: "0"
             chart-dir: ${{ github.workspace }}/./reverse-ip
             helm-version: "v3.10.1" # https://github.com/helm/helm/releases
             release-name: reverseip
