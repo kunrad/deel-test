@@ -126,11 +126,11 @@ jobs:
           with:
             kubeconfig-filepath: $HOME/.kube/config
             action: upgrade -i
-            chart-dir: ./K8s_Infra/reverse-ip
+            chart-dir: ${{ github.workspace }}/./K8s_Infra/reverse-ip
             helm-version: "v3.10.1" # https://github.com/helm/helm/releases
             release-name: reverseip
             namespace: default
-            values-filepath: ./K8s_Infra/reverse-ip/values.yaml 
+            values-filepath: ${{ github.workspace }}/./K8s_Infra/reverse-ip/values.yaml 
           env:
             KUBECONFIG: ${{ github.workspace }}/$HOME/.kube/config
 
