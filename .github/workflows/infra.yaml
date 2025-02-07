@@ -109,7 +109,10 @@ jobs:
           run: doctl auth init --access-token ${{ secrets.DIGITALOCEAN_API_TOKEN }}
 
         - name: Fetch and Configure Kubeconfig using doctl
+          env:
+            CLUSTER_ID: ${{ needs.terraform.outputs.cluster_id }}
           run: |
+            echo "Extracted Cluster ID: $CLUSTER_ID"
             mkdir -p $HOME/.kube
             doctl kubernetes cluster kubeconfig save $CLUSTER_ID
 
