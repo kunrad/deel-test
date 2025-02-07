@@ -78,8 +78,9 @@ jobs:
           id: get-cluster-id
           working-directory: ${{ env.TF_working_dir }}
           run: |
-            echo "CLUSTER_ID=$(terraform output -raw cluster_id)" >> $GITHUB_ENV
-            echo "Cluster ID: $CLUSTER_ID" # Print the value of CLUSTER_ID
+            CLUSTER_ID=$(terraform output -raw cluster_id)
+            echo "CLUSTER_ID=$CLUSTER_ID" >> $GITHUB_ENV
+            echo "Extracted Cluster ID: $CLUSTER_ID"
 
 
     application:
@@ -104,11 +105,13 @@ jobs:
           with:
             token: ${{ secrets.DIGITALOCEAN_API_TOKEN }}
 
+        - name: Authenticate doctl
+          run: doctl auth init --access-token ${{ secrets.DIGITALOCEAN_API_TOKEN }}
+
         - name: Fetch and Configure Kubeconfig using doctl
           run: |
             mkdir -p $HOME/.kube
             doctl kubernetes cluster kubeconfig save $CLUSTER_ID
-            chmod 600 $HOME/.kube/config
 
         - name: Configure Kubeconfig
           run: |
