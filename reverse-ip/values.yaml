@@ -100,6 +100,11 @@ volumeMounts: []
 #   mountPath: "/etc/foo"
 #   readOnly: true
 
+env:
+  databaseUrl:
+    secretName: db-credentials
+    key: DATABASE_URL
+    
 nodeSelector: {}
 
 tolerations: []

@@ -1,7 +1,4 @@
-
-
 name: Terraform Infra Deployment
-
 on: 
     push:
         branches: 
@@ -125,12 +122,17 @@ jobs:
             kubectl get pods -A
 
         - name: Helm Deploy
-          working-directory: ./reverse-ip
-          run: |
-            helm upgrade --install reverseip . -f values.yaml \
-            --namespace default \
-            --timeout 300s \
-            --wait
+          uses: 'deliverybot/helm@v1'
+          with:
+            chart: reverse-ip
+            release: reverseip
+            namespace: default
+            value-files: >-
+              [
+                "reverse-ip/values.yaml"
+              ] 
+          env:
+            KUBECONFIG: ${{ github.workspace }}/$HOME/.kube/config
 
         - name: Verify Deployment
           run: kubectl get pods -n default
