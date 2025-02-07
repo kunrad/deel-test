@@ -118,11 +118,18 @@ jobs:
             mkdir -p $HOME/.kube
             doctl kubernetes cluster kubeconfig save --expiry-seconds 600 $CLUSTER_ID 
 
+        - name: Verify Kubernetes Connection
+          run: |
+            kubectl cluster-info
+            kubectl get nodes
+            kubectl get pods -A
+
         - name: Helm Deploy
           working-directory: ./reverse-ip
           run: |
             helm upgrade --install reverseip . -f values.yaml \
             --namespace default \
+            --timeout 300s \
             --wait
 
         - name: Verify Deployment
