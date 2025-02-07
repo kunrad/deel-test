@@ -116,13 +116,7 @@ jobs:
           run: |
             echo "Extracted Cluster ID: $CLUSTER_ID"
             mkdir -p $HOME/.kube
-            doctl kubernetes cluster kubeconfig save $CLUSTER_ID
-
-        - name: Configure Kubeconfig
-          run: |
-            mkdir -p $HOME/.kube/
-            echo "$KUBECONFIG" | base64 -d > $HOME/.kube/config
-            chmod 600 $HOME/.kube/config
+            doctl kubernetes cluster kubeconfig save --expiry-seconds 600 $CLUSTER_ID 
 
         - name: Helm Deploy
           working-directory: ./reverse-ip
