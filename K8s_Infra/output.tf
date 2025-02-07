@@ -8,6 +8,6 @@ output "kubeconfig" {
 }
 
 output "cluster_id" {
-  value = digitalocean_kubernetes_cluster.cluster.id
+  value       = digitalocean_kubernetes_cluster.my_cluster.id
   description = "Extracted DigitalOcean Kubernetes Cluster ID"
 }
