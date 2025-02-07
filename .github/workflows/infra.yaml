@@ -1,3 +1,5 @@
+
+
 name: Terraform Infra Deployment
 
 on: 
@@ -77,6 +79,7 @@ jobs:
           working-directory: ${{ env.TF_working_dir }}
           run: |
             echo "CLUSTER_ID=$(terraform output -raw cluster_id)" >> $GITHUB_ENV
+            cat $CLUSTER_ID
 
     application:
         name: Helm Deploy
@@ -95,18 +98,15 @@ jobs:
             chmod 700 get_helm.sh
             ./get_helm.sh
 
-        - name: Install doctl (DigitalOcean CLI)
-          run: |
-            curl -sL https://github.com/digitalocean/doctl/releases/latest/download/doctl-$(uname -s)-$(uname -m) > /usr/local/bin/doctl
-            chmod +x /usr/local/bin/doctl
-
-        - name: Authenticate doctl
-          run: doctl auth init --access-token ${{ secrets.DIGITALOCEAN_API_TOKEN }}
+        - name: Install doctl
+          uses: digitalocean/action-doctl@v2
+          with:
+            token: ${{ secrets.DIGITALOCEAN_API_TOKEN }}
 
         - name: Fetch and Configure Kubeconfig using doctl
           run: |
             mkdir -p $HOME/.kube
-            doctl kubernetes cluster kubeconfig save $CLUSTER_ID
+            $CLUSTER_ID
             chmod 600 $HOME/.kube/config
 
         - name: Configure Kubeconfig
