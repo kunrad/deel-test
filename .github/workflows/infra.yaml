@@ -82,6 +82,8 @@ jobs:
             echo "CLUSTER_ID=$CLUSTER_ID" >> $GITHUB_ENV
             echo "CLUSTER_ID=$CLUSTER_ID" >> $GITHUB_OUTPUT # Set output for next job
             echo "Extracted Cluster ID: $CLUSTER_ID"
+        outputs:
+          cluster_id: ${{ steps.get-cluster-id.outputs.CLUSTER_ID }}
 
 
     application:
@@ -90,6 +92,7 @@ jobs:
         needs: terraform
         env:
           TF_VAR_digitalocean_api_token: ${{ secrets.DIGITALOCEAN_API_TOKEN }}
+          CLUSTER_ID: ${{ needs.terraform.outputs.cluster_id }}
 
         steps:
         - name: Checkout repository
@@ -108,10 +111,8 @@ jobs:
 
         - name: Authenticate doctl
           run: doctl auth init --access-token ${{ secrets.DIGITALOCEAN_API_TOKEN }}
-
+        
         - name: Fetch and Configure Kubeconfig using doctl
-          env:
-            CLUSTER_ID: ${{ needs.terraform.outputs.cluster_id }}
           run: |
             echo "Extracted Cluster ID: $CLUSTER_ID"
             mkdir -p $HOME/.kube
