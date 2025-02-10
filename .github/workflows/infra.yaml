@@ -135,8 +135,6 @@ jobs:
               --atomic \
               --timeout 10m \
               -f ./reverse-ip/values.yaml
-          env:
-            KUBECONFIG: $HOME/.kube/config
 
         - name: Verify Deployment
           run: kubectl get pods -n default
