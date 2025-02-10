@@ -39,25 +39,25 @@ This project provides a simple but scalable solution for displaying and storing 
 ## Architecture
 
 1. **FastAPI Application:**
-
+   
    - Listens on port `8088` and returns the reversed IP address.
    - Uses SQLAlchemy to connect to a PostgreSQL database.
    - Environment variable `DATABASE_URL` is used to specify the database connection string.
 2. **Docker Container:**
-
+   
    - Built from a lightweight Python Alpine image.
    - Includes necessary dependencies (installed via `requirements.txt`).
 3. **Kubernetes Deployment:**
-
+   
    - Deployed on a DigitalOcean Kubernetes cluster.
    - Managed by Helm charts for configuration and lifecycle management.
    - Service exposed via a LoadBalancer to allow external access.
 4. **Infrastructure Provisioning:**
-
+   
    - Terraform provisions the Kubernetes cluster and manages state using DigitalOcean Spaces.
    - Backend configuration uses S3‑compatible settings.
 5. **CI/CD Pipeline:**
-
+   
    - GitHub Actions automates the build, push, and deployment processes.
 
 ---
@@ -79,18 +79,18 @@ This project provides a simple but scalable solution for displaying and storing 
 ## Local Development Setup
 
 1. **Clone the Repository:**
-
+   
    ```bash
-   git clone https://github.com/ogdmerlin/IpReverser-K8s.git
-   cd IpReverser-K8s
+   git clone https://github.com/kunrad/deel-test/tree/main
+   cd deel-test
    ```
 2. **Run Locally with Docker Compose (Optional):**
-
+   
    If you want to run the app and a local PostgreSQL instance for development:
-
+   
    ```bash
    # docker-compose.yml
-
+   
    version: '3.8'
    services:
     web:
@@ -108,23 +108,23 @@ This project provides a simple but scalable solution for displaying and storing 
        ports:
        - "5432:5432"
    ```
-
+   
    Then run:
-
+   
    ```bash
    docker-compose up -d
    ```
 3. **Test the FastAPI Application:**
-
+   
    Visit [http://localhost:8088](http://localhost:8088) in your browser. You should see the page displaying your original IP and the reversed IP.
 4. **Access the Database:**
-
+   
    You can access the PostgreSQL database using `psql`:
-
+   
    ```bash
    psql -h localhost -U postgres -d mydatabase
    ```
-
+   
    ![postgresql](/pub/image.png)
 
 ---
@@ -132,17 +132,17 @@ This project provides a simple but scalable solution for displaying and storing 
 ## Building and Pushing the Docker Image
 
 1. **Build the Docker Image:**
-
+   
    ```bash
    docker build -t ogdmerlin/reverse-ip:v1 .
    ```
 2. **Tag the Image:**
-
+   
    ```bash
    docker tag reverse-ip ogdmerlin/reverse-ip:v1
    ```
 3. **Push the Image to Docker Hub:**
-
+   
    ```bash
    docker push ogdmerlin/reverse-ip:v1
    ```
@@ -278,20 +278,20 @@ kubectl get nodes
 ## Deploying the Application with Helm
 
 1. **Add the Helm Repository:**
-
+   
    ```bash
-   helm install reverse-ip 
+   helm install reverse-ip
    ```
 
 > [!TIP]
 > _You can customize the Helm chart values in `./reverse-ip/values.yaml` before deploying_.
 
 2. **Update Deployment Template (templates/deployment.yaml):**
-
+   
    Ensure the environment variable is injected:
-
+   
    ```yaml
-    env:
+   env:
     - name: DATABASE_URL
       valueFrom:
         secretKeyRef:
@@ -299,7 +299,7 @@ kubectl get nodes
             key: DATABASE_URL
    ```
 3. **Create or Update the Kubernetes Secret:**
-
+   
    ```bash
    kubectl create secret generic db-credentials --from-literal=DATABASE_URL=postgresql://user:password@host:port/dbname
    ```
@@ -308,14 +308,14 @@ kubectl get nodes
 > _Replace the connection string with your PostgreSQL credentials_.
 
 4. **Deploy the Application with helm:**
-
+   
    ```bash
-    helm install reverse-ip . -f values.yaml
+   helm install reverse-ip . -f values.yaml
     # For updates
     helm upgrade reverse-ip . -f values.yaml
    ```
 5. **Verify the Deployment:**
-
+   
    ```bash
    kubectl get pods
    kubectl get svc
@@ -347,7 +347,6 @@ Our GitHub Actions workflow (.github/workflows/ci-cd.yaml) builds the Docker ima
 
 For the cause of this deployment I did not have enough time to automate the entire process. I had to create some trigger based automated services.
 I had 3 sets of pipelines.
-
 
 1. deploy_docker.yaml:
    This pipeline created and deployed the container to Docker Registry
@@ -582,10 +581,7 @@ jobs:
 
     - name: Verify Secret Creation
       run: kubectl get secret db-credentials -o yaml
-
 ```
-
-
 
 ## Conclusion
 
@@ -595,3 +591,4 @@ _This documentation is intended to serve as a complete guide for developers and 
 ---
 This README provides an enterprise‑style, detailed documentation for your project with all necessary commands and explanations. Feel free to modify sections to better match your exact setup and project requirements.
 ```
+
