@@ -2,6 +2,9 @@
 
 A FastAPI web application that accepts incoming HTTP requests, displays the caller’s IP in reverse order, and stores the record in a PostgreSQL database. The project is containerized with Docker, deployed on a DigitalOcean Kubernetes cluster using Helm, and its infrastructure is provisioned with Terraform. CI/CD is managed via GitHub Actions.
 
+
+Access the application using the IP: **http://134.199.138.99:8088/**
+
 ---
 
 ## Table of Contents
