@@ -348,240 +348,244 @@ Our GitHub Actions workflow (.github/workflows/ci-cd.yaml) builds the Docker ima
 For the cause of this deployment I did not have enough time to automate the entire process. I had to create some trigger based automated services.
 I had 3 sets of pipelines.
 
+
 1. deploy_docker.yaml:
    This pipeline created and deployed the container to Docker Registry
 
-   ```
-   name: Build and Push Docker Image
+```
+name: Build and Push Docker Image
 
-   on:
-       push:
-           branches:
-               - main
-           paths:
-               - 'Dockerfile'
-               - '.github/workflows/deploy_docker.yaml'
+on:
+    push:
+        branches:
+            - main
+        paths:
+            - 'Dockerfile'
+            - '.github/workflows/deploy_docker.yaml'
 
-   jobs:
-       build:
-           runs-on: ubuntu-latest
+jobs:
+    build:
+        runs-on: ubuntu-latest
 
-           steps:
-           - name: Checkout repository
-             uses: actions/checkout@v2
+        steps:
+        - name: Checkout repository
+          uses: actions/checkout@v2
 
-           - name: Set up Docker Buildx
-             uses: docker/setup-buildx-action@v1
+        - name: Set up Docker Buildx
+          uses: docker/setup-buildx-action@v1
 
-           - name: Log in to Docker Hub
-             uses: docker/login-action@v1
-             with:
-               username: ${{ secrets.DOCKER_USERNAME }}
-               password: ${{ secrets.DOCKER_PASSWORD }}
+        - name: Log in to Docker Hub
+          uses: docker/login-action@v1
+          with:
+            username: ${{ secrets.DOCKER_USERNAME }}
+            password: ${{ secrets.DOCKER_PASSWORD }}
 
-           - name: Build and push Docker image
-             uses: docker/build-push-action@v2
-             with:
-                   context: .
-                   push: true
-                   tags: ${{ secrets.DOCKER_USERNAME }}/reverseip:latest
-   ```
+        - name: Build and push Docker image
+          uses: docker/build-push-action@v2
+          with:
+                context: .
+                push: true
+                tags: ${{ secrets.DOCKER_USERNAME }}/reverseip:latest
+```
 
-   2. Infra.yaml: This pipeline setup  the infrastructure and also deployed the helm chart
+2. Infra.yaml:This pipeline setup  the infrastructure and also deployed the helm chart
 
-      ```
-      name: Terraform Infra Deployment
-      on: 
-          push:
-              branches: 
-                  - main #Trigger deployment on push to main branch
-          pull_request:
-              branches: 
-                  - main #Trigger deployment on pull request to main branch   
+```
+name: Terraform Infra Deployment
+on: 
+    push:
+        branches: 
+            - main #Trigger deployment on push to main branch
+    pull_request:
+        branches: 
+            - main #Trigger deployment on pull request to main branch   
 
-      permissions:
-          id-token: write
-          contents: read
+permissions:
+    id-token: write
+    contents: read
 
-      jobs:
-          terraform:
-              name: Deploy Infrastructure 
-              runs-on: ubuntu-latest
-              env:
-                TF_version: latest
-                TF_working_dir: ./K8s_Infra/
-                TF_VAR_digitalocean_region: ${{ secrets.Region }}
-                TF_VAR_BACKEND_digitalocean_spaces_bucket: ${{ secrets.DIGITALOCEAN_SPACES_BUCKET }}
-                TF_VAR_BACKEND_digitalocean_spaces_access_key: ${{ secrets.DIGITALOCEAN_SPACES_ACCESS_KEY }}
-                TF_VAR_BACKEND_digitalocean_spaces_secret_key: ${{ secrets.DIGITALOCEAN_SPACES_SECRET_KEY }}
-                TF_VAR_digitalocean_api_token: ${{ secrets.DIGITALOCEAN_API_TOKEN }}
+jobs:
+    terraform:
+        name: Deploy Infrastructure 
+        runs-on: ubuntu-latest
+        env:
+          TF_version: latest
+          TF_working_dir: ./K8s_Infra/
+          TF_VAR_digitalocean_region: ${{ secrets.Region }}
+          TF_VAR_BACKEND_digitalocean_spaces_bucket: ${{ secrets.DIGITALOCEAN_SPACES_BUCKET }}
+          TF_VAR_BACKEND_digitalocean_spaces_access_key: ${{ secrets.DIGITALOCEAN_SPACES_ACCESS_KEY }}
+          TF_VAR_BACKEND_digitalocean_spaces_secret_key: ${{ secrets.DIGITALOCEAN_SPACES_SECRET_KEY }}
+          TF_VAR_digitalocean_api_token: ${{ secrets.DIGITALOCEAN_API_TOKEN }}
 
-              steps:
-              - name: Checkout repository
-                uses: actions/checkout@v4
+        steps:
+        - name: Checkout repository
+          uses: actions/checkout@v4
 
-              - name: Setup Terraform
-                uses: hashicorp/setup-terraform@v3
-                with:
-                  terraform_version: ${{ env.TF_version }}
+        - name: Setup Terraform
+          uses: hashicorp/setup-terraform@v3
+          with:
+            terraform_version: ${{ env.TF_version }}
 
-              - name: Set Terraform Backend Key
-                run: echo "TF_VAR_BACKEND_digitalocean_spaces_key=${GITHUB_REPOSITORY#*/}/${GITHUB_REF#refs/heads/}/terraform.tfstate" >> $GITHUB_ENV
+        - name: Set Terraform Backend Key
+          run: echo "TF_VAR_BACKEND_digitalocean_spaces_key=${GITHUB_REPOSITORY#*/}/${GITHUB_REF#refs/heads/}/terraform.tfstate" >> $GITHUB_ENV
 
-              - name: Set Digital Space Credentials
-                run: |
-                  echo "TF_VAR_digitalocean_region=${{ secrets.Region }}" >> $GITHUB_ENV
-                  echo "TF_VAR_BACKEND_digitalocean_spaces_access_key=${{ secrets.DIGITALOCEAN_SPACES_ACCESS_KEY }}" >> $GITHUB_ENV
-                  echo "TF_VAR_BACKEND_digitalocean_spaces_secret_key=${{ secrets.DIGITALOCEAN_SPACES_SECRET_KEY  }}" >> $GITHUB_ENV
-                  echo "TF_VAR_digitalocean_api_token=${{ secrets.DIGITALOCEAN_API_TOKEN }}" >> $GITHUB_ENV
+        - name: Set Digital Space Credentials
+          run: |
+            echo "TF_VAR_digitalocean_region=${{ secrets.Region }}" >> $GITHUB_ENV
+            echo "TF_VAR_BACKEND_digitalocean_spaces_access_key=${{ secrets.DIGITALOCEAN_SPACES_ACCESS_KEY }}" >> $GITHUB_ENV
+            echo "TF_VAR_BACKEND_digitalocean_spaces_secret_key=${{ secrets.DIGITALOCEAN_SPACES_SECRET_KEY  }}" >> $GITHUB_ENV
+            echo "TF_VAR_digitalocean_api_token=${{ secrets.DIGITALOCEAN_API_TOKEN }}" >> $GITHUB_ENV
 
-              - name: Terraform Format
-                id: fmt
-                working-directory: ${{ env.TF_working_dir }}
-                run: terraform fmt -check
-                continue-on-error: true
+        - name: Terraform Format
+          id: fmt
+          working-directory: ${{ env.TF_working_dir }}
+          run: terraform fmt -check
+          continue-on-error: true
 
-              - name: Terraform Init
-                id: init
-                working-directory: ${{ env.TF_working_dir }}
-                run: |
-                  terraform init -input=false \
-                    -backend-config="bucket=${TF_VAR_BACKEND_digitalocean_spaces_bucket}" \
-                    -backend-config="key=${TF_VAR_BACKEND_digitalocean_spaces_key}" \
-                    -backend-config="access_key=${TF_VAR_BACKEND_digitalocean_spaces_access_key}" \
-                    -backend-config="secret_key=${TF_VAR_BACKEND_digitalocean_spaces_secret_key}" \
-                    -backend-config="region=${TF_VAR_digitalocean_region}" \
-
-
-              - name: Terraform Plan
-                id: plan
-                working-directory: ${{ env.TF_working_dir }}
-                run: terraform plan -var="digitalocean_token=${TF_VAR_digitalocean_api_token}" -input=false -out="${GITHUB_SHA:0:7}.tfplan"
-
-              - name: Terraform Apply
-                id: apply
-                working-directory: ${{ env.TF_working_dir }}
-                run: terraform apply --auto-approve -var="digitalocean_token=${TF_VAR_digitalocean_api_token}" -input=false "${GITHUB_SHA:0:7}.tfplan"
-
-              - name: Cluster ID
-                id: get-cluster-id
-                working-directory: ${{ env.TF_working_dir }}
-                run: |
-                  CLUSTER_ID=$(terraform output -raw cluster_id)
-                  echo "CLUSTER_ID=$CLUSTER_ID" >> $GITHUB_ENV
-                  echo "CLUSTER_ID=$CLUSTER_ID" >> $GITHUB_OUTPUT # Set output for next job
-                  echo "Extracted Cluster ID: $CLUSTER_ID"
-              outputs:
-                cluster_id: ${{ steps.get-cluster-id.outputs.CLUSTER_ID }}
+        - name: Terraform Init
+          id: init
+          working-directory: ${{ env.TF_working_dir }}
+          run: |
+            terraform init -input=false \
+              -backend-config="bucket=${TF_VAR_BACKEND_digitalocean_spaces_bucket}" \
+              -backend-config="key=${TF_VAR_BACKEND_digitalocean_spaces_key}" \
+              -backend-config="access_key=${TF_VAR_BACKEND_digitalocean_spaces_access_key}" \
+              -backend-config="secret_key=${TF_VAR_BACKEND_digitalocean_spaces_secret_key}" \
+              -backend-config="region=${TF_VAR_digitalocean_region}" \
 
 
-          application:
-              name: Helm Deploy
-              runs-on: ubuntu-latest
-              needs: terraform
-              env:
-                TF_VAR_digitalocean_api_token: ${{ secrets.DIGITALOCEAN_API_TOKEN }}
-                CLUSTER_ID: ${{ needs.terraform.outputs.cluster_id }}
-                TF_application_dir: ./reverse-ip/
+        - name: Terraform Plan
+          id: plan
+          working-directory: ${{ env.TF_working_dir }}
+          run: terraform plan -var="digitalocean_token=${TF_VAR_digitalocean_api_token}" -input=false -out="${GITHUB_SHA:0:7}.tfplan"
 
-              steps:
-              - name: Checkout repository
-                uses: actions/checkout@v4
+        - name: Terraform Apply
+          id: apply
+          working-directory: ${{ env.TF_working_dir }}
+          run: terraform apply --auto-approve -var="digitalocean_token=${TF_VAR_digitalocean_api_token}" -input=false "${GITHUB_SHA:0:7}.tfplan"
 
-              - name: Install Helm
-                run: |
-                  curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
-                  chmod 700 get_helm.sh
-                  ./get_helm.sh
+        - name: Cluster ID
+          id: get-cluster-id
+          working-directory: ${{ env.TF_working_dir }}
+          run: |
+            CLUSTER_ID=$(terraform output -raw cluster_id)
+            echo "CLUSTER_ID=$CLUSTER_ID" >> $GITHUB_ENV
+            echo "CLUSTER_ID=$CLUSTER_ID" >> $GITHUB_OUTPUT # Set output for next job
+            echo "Extracted Cluster ID: $CLUSTER_ID"
+        outputs:
+          cluster_id: ${{ steps.get-cluster-id.outputs.CLUSTER_ID }}
 
-              - name: Install doctl
-                uses: digitalocean/action-doctl@v2
-                with:
-                  token: ${{ secrets.DIGITALOCEAN_API_TOKEN }}
 
-              - name: Authenticate doctl
-                run: doctl auth init --access-token ${{ secrets.DIGITALOCEAN_API_TOKEN }}
+    application:
+        name: Helm Deploy
+        runs-on: ubuntu-latest
+        needs: terraform
+        env:
+          TF_VAR_digitalocean_api_token: ${{ secrets.DIGITALOCEAN_API_TOKEN }}
+          CLUSTER_ID: ${{ needs.terraform.outputs.cluster_id }}
+          TF_application_dir: ./reverse-ip/
 
-              - name: Fetch and Configure Kubeconfig using doctl
-                run: |
-                  echo "Extracted Cluster ID: $CLUSTER_ID"
-                  mkdir -p $HOME/.kube
-                  doctl kubernetes cluster kubeconfig save --expiry-seconds 600 $CLUSTER_ID 
+        steps:
+        - name: Checkout repository
+          uses: actions/checkout@v4
 
-              - name: Verify Kubernetes Connection
-                run: |
-                  kubectl cluster-info
-                  kubectl get nodes
-                  kubectl get pods -A
+        - name: Install Helm
+          run: |
+            curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
+            chmod 700 get_helm.sh
+            ./get_helm.sh
 
-              - name: Install Helm
-                uses: azure/setup-helm@v3
-                with:
-                  version: v3.10.1
+        - name: Install doctl
+          uses: digitalocean/action-doctl@v2
+          with:
+            token: ${{ secrets.DIGITALOCEAN_API_TOKEN }}
 
-              - name: Deploy Helm Chart
-                run: |
-                  helm upgrade --install reverseip ./reverse-ip \
-                    --namespace default \
-                    --atomic \
-                    --timeout 10m \
-                    -f ./reverse-ip/values.yaml
+        - name: Authenticate doctl
+          run: doctl auth init --access-token ${{ secrets.DIGITALOCEAN_API_TOKEN }}
 
-              - name: Verify Deployment
-                run: kubectl get pods -n default
-      ```
-   3. secret_creation.yaml: This pipline uses the DB credential to create the secret which the application connects to
+        - name: Fetch and Configure Kubeconfig using doctl
+          run: |
+            echo "Extracted Cluster ID: $CLUSTER_ID"
+            mkdir -p $HOME/.kube
+            doctl kubernetes cluster kubeconfig save --expiry-seconds 600 $CLUSTER_ID 
 
-      ```
-      name: Manual Kubernetes Secret Creation
+        - name: Verify Kubernetes Connection
+          run: |
+            kubectl cluster-info
+            kubectl get nodes
+            kubectl get pods -A
 
-      on:
-        workflow_dispatch:  # Manual trigger only
+        - name: Install Helm
+          uses: azure/setup-helm@v3
+          with:
+            version: v3.10.1
 
-      permissions:
-        id-token: write
-        contents: read
+        - name: Deploy Helm Chart
+          run: |
+            helm upgrade --install reverseip ./reverse-ip \
+              --namespace default \
+              --atomic \
+              --timeout 10m \
+              -f ./reverse-ip/values.yaml
 
-      jobs:
-        create-secret:
-          name: Create Kubernetes Secret
-          runs-on: ubuntu-latest
-          env:
-            CLUSTER_ID: ${{ secrets.DIGITALOCEAN_CLUSTER_ID }}
-            DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        - name: Verify Deployment
+          run: kubectl get pods -n default
+```
 
-          steps:
-          - name: Checkout Repository
-            uses: actions/checkout@v4
+3. secret_creation.yaml:This pipline uses the DB credential to create the secret which the application connects to
 
-          - name: Install doctl
-            uses: digitalocean/action-doctl@v2
-            with:
-              token: ${{ secrets.DIGITALOCEAN_API_TOKEN }}
+```
+name: Manual Kubernetes Secret Creation
 
-          - name: Authenticate with DigitalOcean
-            run: doctl auth init --access-token ${{ secrets.DIGITALOCEAN_API_TOKEN }}
+on:
+  workflow_dispatch:  # Manual trigger only
 
-          - name: Fetch and Configure Kubeconfig
-            run: |
-              mkdir -p $HOME/.kube
-              doctl kubernetes cluster kubeconfig save "$CLUSTER_ID"
+permissions:
+  id-token: write
+  contents: read
 
-          - name: Verify Kubernetes Connection
-            run: |
-              kubectl cluster-info
-              kubectl get nodes
+jobs:
+  create-secret:
+    name: Create Kubernetes Secret
+    runs-on: ubuntu-latest
+    env:
+      CLUSTER_ID: ${{ secrets.DIGITALOCEAN_CLUSTER_ID }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
-          - name: Create Kubernetes Secret
-            run: |
-              kubectl create secret generic db-credentials \
-                --from-literal=DATABASE_URL="${DATABASE_URL}" \
-                --dry-run=client -o yaml | kubectl apply -f -
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
 
-          - name: Verify Secret Creation
-            run: kubectl get secret db-credentials -o yaml
+    - name: Install doctl
+      uses: digitalocean/action-doctl@v2
+      with:
+        token: ${{ secrets.DIGITALOCEAN_API_TOKEN }}
 
-      ```
+    - name: Authenticate with DigitalOcean
+      run: doctl auth init --access-token ${{ secrets.DIGITALOCEAN_API_TOKEN }}
+
+    - name: Fetch and Configure Kubeconfig
+      run: |
+        mkdir -p $HOME/.kube
+        doctl kubernetes cluster kubeconfig save "$CLUSTER_ID"
+
+    - name: Verify Kubernetes Connection
+      run: |
+        kubectl cluster-info
+        kubectl get nodes
+
+    - name: Create Kubernetes Secret
+      run: |
+        kubectl create secret generic db-credentials \
+          --from-literal=DATABASE_URL="${DATABASE_URL}" \
+          --dry-run=client -o yaml | kubectl apply -f -
+
+    - name: Verify Secret Creation
+      run: kubectl get secret db-credentials -o yaml
+
+```
+
+
 
 ## Conclusion
 
