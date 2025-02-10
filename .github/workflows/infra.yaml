@@ -125,7 +125,7 @@ jobs:
           uses: 'licenseware/helm@v1'
           with:
             kubeconfig-filepath: $HOME/.kube/config
-            action: install -i
+            action: install 
             atomic: "0"
             chart-dir: ${{ github.workspace }}/./reverse-ip
             helm-version: "v3.10.1" # https://github.com/helm/helm/releases
