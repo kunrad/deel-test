@@ -125,14 +125,15 @@ jobs:
           uses: 'licenseware/helm@v1'
           with:
             kubeconfig-filepath: $HOME/.kube/config
-            action: install 
+            action: install
             atomic: "0"
             chart-dir: ${{ github.workspace }}/./reverse-ip
             helm-version: "v3.10.1" # https://github.com/helm/helm/releases
             release-name: reverseip
             namespace: default
             timeout: 10m
-            values-filepath: ${{ github.workspace }}/./reverse-ip/values.yaml 
+            values-filepath: ${{ github.workspace }}/./reverse-ip/values.yaml
+            cleanup-on-fail: "1"
           env:
             KUBECONFIG: ${{ github.workspace }}/$HOME/.kube/config
 
