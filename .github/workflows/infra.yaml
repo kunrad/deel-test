@@ -90,6 +90,7 @@ jobs:
         env:
           TF_VAR_digitalocean_api_token: ${{ secrets.DIGITALOCEAN_API_TOKEN }}
           CLUSTER_ID: ${{ needs.terraform.outputs.cluster_id }}
+          TF_application_dir: ./reverse-ip/
 
         steps:
         - name: Checkout repository
@@ -121,21 +122,21 @@ jobs:
             kubectl get nodes
             kubectl get pods -A
 
-        - name: Helm Deploy
-          uses: 'licenseware/helm@v1'
+        - name: Install Helm
+          uses: azure/setup-helm@v3
           with:
-            kubeconfig-filepath: $HOME/.kube/config
-            action: install
-            atomic: "0"
-            chart-dir: ${{ github.workspace }}/./reverse-ip
-            helm-version: "v3.10.1" # https://github.com/helm/helm/releases
-            release-name: reverseip
-            namespace: default
-            timeout: 10m
-            values-filepath: ${{ github.workspace }}/./reverse-ip/values.yaml
-            cleanup-on-fail: "1"
+            version: v3.10.1
+
+        - name: Deploy Helm Chart
+          working-directory: ${{ env.TF_application_dir }}
+          run: |
+            helm upgrade --install reverseip ./reverse-ip \
+              --namespace default \
+              --atomic \
+              --timeout 10m \
+              -f ./reverse-ip/values.yaml
           env:
-            KUBECONFIG: ${{ github.workspace }}/$HOME/.kube/config
+            KUBECONFIG: $HOME/.kube/config
 
         - name: Verify Deployment
           run: kubectl get pods -n default
