@@ -128,7 +128,6 @@ jobs:
             version: v3.10.1
 
         - name: Deploy Helm Chart
-          working-directory: ${{ env.TF_application_dir }}
           run: |
             helm upgrade --install reverseip ./reverse-ip \
               --namespace default \
